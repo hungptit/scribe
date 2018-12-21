@@ -3,6 +3,8 @@
 #include <algorithm>
 #include <vector>
 
+#include "utils.hpp"
+
 #include "utils/matchers.hpp"
 #include "utils/matchers_avx2.hpp"
 #include "utils/regex_matchers.hpp"
@@ -33,10 +35,30 @@ namespace scribe {
     };
 
     struct StripPolicy {
-        void process(const char *buffer, const size_t len) { fmt::print(""); }
-    };
+        template <typename Params> StripPolicy(Params &&params) {
+            color = params.color();
+            inverse_match = params.inverse_match();
+            exact_match = params.exact_match();
+        }
 
-    void strip_scribe_headers(const std::string &aPath) {}
+        void process(const char *buffer, const size_t len) {
+            if (!color) {
+                print_plain_text(buffer, buffer + len);
+            } else {
+                print_color_text(buffer, buffer + len);
+            }
+        }
+
+        bool color;
+        bool inverse_match;
+        bool exact_match;
+    }; // namespace scribe
+
+    void strip_scribe_headers(StripParams &params) {
+        using Reader = ioutils::FileReader<StripPolicy>;
+        Reader reader(params);
+        for (auto const &afile : params.paths) { reader(afile.data()); }
+    }
 
     StripParams parse_input_arguments(int argc, char *argv[]) {
         StripParams params;
@@ -86,17 +108,7 @@ namespace scribe {
                       exact_match * scribe::EXACT_MATCH |
                       inverse_match * scribe::INVERSE_MATCH | stdin * scribe::STDIN;
 
-        // If users do not specify the search pattern then the first elements of paths is the
-        // search pattern.
-        if (params.pattern.empty()) {
-            if (!stdin && params.paths.size() < 2) {
-                throw std::runtime_error(
-                    "Invalid syntax. The search pattern and search paths are required.");
-            }
-            params.pattern = params.paths.front();
-            params.paths.erase(params.paths.begin());
-        }
-
+        // Print out input parameters if verbose flag is set.
         if (verbose) { fmt::print("{}", params); };
 
         return params;
@@ -123,6 +135,5 @@ namespace fmt {
 
 int main(int argc, char *argv[]) {
     auto params = scribe::parse_input_arguments(argc, argv);
-    std::for_each(params.paths.cbegin(), params.paths.cend(),
-                  [&params](auto afile) { scribe::strip_scribe_headers(afile); });
+    scribe::strip_scribe_headers(params);
 }
