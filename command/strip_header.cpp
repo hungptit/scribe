@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <vector>
 
+#include "stream.hpp"
 #include "utils.hpp"
 
 #include "utils/matchers.hpp"
@@ -19,6 +20,8 @@ namespace scribe {
         EXACT_MATCH = 1 << 2,
         INVERSE_MATCH = 1 << 3,
         STDIN = 1 << 4,
+        JSON_OUTPUT = 1 << 5,
+        JSON_BEAUTIFY_OUTPUT = 1 << 6,
     };
 
     struct StripParams {
@@ -34,30 +37,35 @@ namespace scribe {
         bool stdin() const { return (info & STDIN) > 0; }
     };
 
-    struct StripPolicy {
-        template <typename Params> StripPolicy(Params &&params) {
-            color = params.color();
-            inverse_match = params.inverse_match();
-            exact_match = params.exact_match();
-        }
-
-        void process(const char *buffer, const size_t len) {
-            if (!color) {
-                print_plain_text(buffer, buffer + len);
-            } else {
-                print_color_text(buffer, buffer + len);
-            }
-        }
-
-        bool color;
-        bool inverse_match;
-        bool exact_match;
-    }; // namespace scribe
-
-    void strip_scribe_headers(StripParams &params) {
-        using Reader = ioutils::FileReader<StripPolicy>;
+    template <typename Reader> void extract(const StripParams &params) {
         Reader reader(params);
         for (auto const &afile : params.paths) { reader(afile.data()); }
+    }
+
+    void strip_scribe_headers(const StripParams &params) {
+        if (params.pattern.empty()) {
+			using Policy = scribe::StreamPolicy<scribe::All>;
+			using Reader = ioutils::FileReader<Policy>;
+			extract<Reader>(params);
+        } else {
+            if (params.exact_match()) {
+				using Policy = scribe::StreamPolicy<utils::ExactMatchAVX2>;
+				using Reader = ioutils::FileReader<Policy>;
+				extract<Reader>(params);
+            } else {
+				if (!params.inverse_match()) {
+					using Matcher = utils::hyperscan::RegexMatcher;
+					using Policy = scribe::StreamPolicy<Matcher>;
+					using Reader = ioutils::FileReader<Policy>;
+					extract<Reader>(params);
+				} else {
+					using Matcher = utils::hyperscan::RegexMatcherInv;
+					using Policy = scribe::StreamPolicy<Matcher>;
+					using Reader = ioutils::FileReader<Policy>;
+					extract<Reader>(params);
+				}
+            }
+        }
     }
 
     StripParams parse_input_arguments(int argc, char *argv[]) {
@@ -82,7 +90,7 @@ namespace scribe {
                    clara::Opt(ignore_case)["-i"]["--ignore-case"]("Ignore case") |
                    clara::Opt(color)["-c"]["--color"]("Print out color text.") |
                    clara::Opt(stdin)["-s"]["--stdin"]("Read data from the STDIN.") |
-                   clara::Opt(params.pattern, "pattern")["-e"]["--pattern"]("Search pattern.") |
+			clara::Opt(params.pattern, "pattern")["-e"]["-p"]["--pattern"]("Search pattern.") |
 
                    // Required arguments.
                    clara::Arg(params.paths, "paths")("Search paths");
