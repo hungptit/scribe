@@ -72,7 +72,7 @@ namespace scribe {
                 const char *ptr = static_cast<const char *>(
                     utils::avx2::memchr(begin, OPEN_CURLY_BRACE, len));
                 if (ptr != nullptr) {
-					output(ptr, end - ptr);
+                    output(ptr, end - ptr);
                 } else {
                     // TODO: What should we do with the invalid log messages?
                     fmt::print(stderr, "Invalid log message: {0} -> {1}",

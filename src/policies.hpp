@@ -41,10 +41,12 @@ namespace scribe {
             }
 
             // Print out results in the compact JSON format.
-            rapidjson::StringBuffer sb;
-            rapidjson::PrettyWriter<rapidjson::StringBuffer> writer(sb);
-            document.Accept(writer);
-            if (!silent) { fmt::print("{0}\n", sb.GetString()); }
+            if (!silent) {
+                rapidjson::StringBuffer sb;
+                rapidjson::Writer<rapidjson::StringBuffer> writer(sb);
+                document.Accept(writer);
+                fmt::print("{0}\n", sb.GetString());
+            }
         }
 
         bool silent = false;
@@ -69,10 +71,12 @@ namespace scribe {
             }
 
             // Print out results in the compact JSON format.
-            rapidjson::StringBuffer sb;
-            rapidjson::PrettyWriter<rapidjson::StringBuffer> writer(sb);
-            document.Accept(writer);
-            if (!silent) { fmt::print("{0}\n", sb.GetString()); }
+            if (!silent) {
+                rapidjson::StringBuffer sb;
+                rapidjson::PrettyWriter<rapidjson::StringBuffer> writer(sb);
+                document.Accept(writer);
+                fmt::print("{0}\n", sb.GetString());
+            }
         }
 
         bool silent = false;
