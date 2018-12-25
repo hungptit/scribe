@@ -4,10 +4,14 @@
 #include <cstring>
 #include <string>
 
-namespace scribe {
-    struct ReportPolicy {};
+#include "csv.hpp"
+#include "json.hpp"
+#include "report.hpp"
+#include "sqlite.hpp"
 
-    struct RawPolicy {
+namespace scribe {
+    class RawPolicy {
+      public:
         template <typename Params>
         RawPolicy(Params &&params) : silent(params.silent()), color(params.color()) {}
         void operator()(const char *begin, const size_t len) {
@@ -20,71 +24,20 @@ namespace scribe {
             }
         }
 
+      private:
         bool silent = false;
         bool color = false;
     };
 
-    struct CompactJsonPolicy {
+	struct StorePolicy {
         template <typename Params>
-        CompactJsonPolicy(Params &&params) : silent(params.silent()), document(), linebuf() {}
-
+        StorePolicy(Params &&params) : silent(params.silent()){}
         void operator()(const char *begin, const size_t len) {
-            linebuf.clear();
-            linebuf.append(begin, len);
-            char *data = const_cast<char *>(linebuf.data());
-
-            // Parse given JSON string
-            if (document.ParseInsitu(data).HasParseError()) {
-                fmt::print(stderr, "Cannot parse given string: \033[1;32m{0}\033[0m\n",
-                           std::string(begin, len));
-                return;
-            }
-
-            // Print out results in the compact JSON format.
-            if (!silent) {
-                rapidjson::StringBuffer sb;
-                rapidjson::Writer<rapidjson::StringBuffer> writer(sb);
-                document.Accept(writer);
-                fmt::print("{0}\n", sb.GetString());
-            }
+			if (!silent) {
+				results.emplace_back(std::string(begin, len));
+			}
         }
-
-        bool silent = false;
-        rapidjson::Document document;
-        std::string linebuf;
-    };
-
-    struct PrettyJsonPolicy {
-        template <typename Params>
-        PrettyJsonPolicy(Params &&params) : silent(params.silent()), document(), linebuf() {}
-
-        void operator()(const char *begin, const size_t len) {
-            linebuf.clear();
-            linebuf.append(begin, len);
-            char *data = const_cast<char *>(linebuf.data());
-
-            // Parse given JSON string
-            if (document.ParseInsitu(data).HasParseError()) {
-                fmt::print(stderr, "Cannot parse given string: \033[1;32m{0}\033[0m\n",
-                           std::string(begin, len));
-                return;
-            }
-
-            // Print out results in the compact JSON format.
-            if (!silent) {
-                rapidjson::StringBuffer sb;
-                rapidjson::PrettyWriter<rapidjson::StringBuffer> writer(sb);
-                document.Accept(writer);
-                fmt::print("{0}\n", sb.GetString());
-            }
-        }
-
-        bool silent = false;
-        rapidjson::Document document;
-        std::string linebuf;
-    };
-
-    struct SQLitePolicy {};
-
-    struct CSVPolicy {};
+		bool silent = 0;
+		std::vector<std::string> results;
+	};
 } // namespace scribe

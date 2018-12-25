@@ -7,13 +7,14 @@
 #include "utils.hpp"
 #include "params.hpp"
 #include "policies.hpp"
+#include "report.hpp"
 
 int main(int argc, char *argv[]) {
     auto params = scribe::parse_input_arguments(argc, argv);
 	if (params.report()) {
-		fmt::print("TODO: A report");
+		scribe::strip_scribe_headers<scribe::ReportPolicy>(params);
 	} else if (params.table()) {
-		fmt::print("TODO: A table");
+		scribe::strip_scribe_headers<scribe::CSVPolicy>(params);
 	} else if (params.raw()) {
 		scribe::strip_scribe_headers<scribe::RawPolicy>(params);
 	} else if (params.json_output()) {

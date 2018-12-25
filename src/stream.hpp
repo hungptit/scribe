@@ -7,10 +7,6 @@
 #include <cstring>
 #include <string>
 
-#include "rapidjson/document.h"
-#include "rapidjson/prettywriter.h" // for stringify JSON
-#include "rapidjson/stringbuffer.h"
-#include "rapidjson/writer.h"
 
 #include "policies.hpp"
 
@@ -75,7 +71,7 @@ namespace scribe {
                     output(ptr, end - ptr);
                 } else {
                     // TODO: What should we do with the invalid log messages?
-                    fmt::print(stderr, "Invalid log message: {0} -> {1}",
+                    fmt::print(stderr, "Invalid log message: {0} -> {1}\n",
                                std::string(begin, begin + len), len);
                 }
             }
