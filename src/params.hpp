@@ -22,6 +22,7 @@ namespace scribe {
         RAW = 1 << 9,
         TABLE = 1 << 10,
         REPORT = 1 << 11,
+        TIMER = 1 << 12,
     };
 
     struct Params {
@@ -43,6 +44,7 @@ namespace scribe {
         bool raw() const { return (info & RAW) > 0; }
         bool table() const { return (info & TABLE) > 0; }
         bool report() const { return (info & REPORT) > 0; }
+        bool timer() const { return (info & TIMER) > 0; }
     };
 
     template <typename Reader> void extract(const Params &params) {
@@ -99,6 +101,8 @@ namespace scribe {
         bool table = false;               // Output results in tabular format i.e CSV.
         bool raw = false; // Output raw data which is in the orignal JSON string.
 
+        bool timer = false; // Display execution time.
+
         auto cli =
             clara::Help(help) |
             clara::Opt(verbose)["-v"]["--verbose"]("Display verbose information") |
@@ -111,6 +115,7 @@ namespace scribe {
             clara::Opt(report)["--report"]("Generate a report for all log messages.") |
             clara::Opt(table)["--table"]("Generate a report in a tabular format i.e CSV.") |
             clara::Opt(silent)["--silent"]("Do not output results.") |
+            clara::Opt(timer)["--timer"]("Display execution time.") |
             clara::Opt(json_output)["--json"]("Output results in JSON format.") |
             clara::Opt(json_compact_output)["--compact-json"](
                 "Output results in JSON compact format.") |
@@ -147,7 +152,7 @@ namespace scribe {
                       silent * scribe::SILENT | json_output * scribe::JSON_OUTPUT |
                       json_compact_output * scribe::JSON_COMPACT_OUTPUT |
                       json_pretty_output * scribe::JSON_PRETTY_OUTPUT | raw * scribe::RAW |
-                      table * scribe::TABLE | report * scribe::REPORT;
+                      table * scribe::TABLE | report * scribe::REPORT | timer * scribe::TIMER;
 
         // Print out input parameters if verbose flag is set.
         if (verbose) { fmt::print("{}", params); };
@@ -170,10 +175,10 @@ namespace fmt {
                 "Search pattern: {0}\nInput options:\n\tregex_mode: "
                 "{1}\n\tverbose: {2}\n\tcolor: "
                 "{3}\n\tinverse_match: {4}\n\texact_match: {5}\n\tjson: "
-                "{6}\n\tcompact-json: {7}\n\tpretty-json: {8}\n\tsilent: {9}\n\tstdin: {10}\n",
+                "{6}\n\tcompact-json: {7}\n\tpretty-json: {8}\n\tsilent: {9}\n\tstdin: {10}\n\ttimer: {11}\n",
                 p.pattern, p.regex_mode, p.verbose(), p.color(), p.inverse_match(),
                 p.exact_match(), p.json_output(), p.json_compact_output(),
-                p.json_pretty_output(), p.silent(), p.stdin());
+                p.json_pretty_output(), p.silent(), p.stdin(), p.timer());
         }
     };
 } // namespace fmt

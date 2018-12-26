@@ -35,17 +35,17 @@ namespace scribe {
       public:
         template <typename Params>
         ReportPolicy(Params &&params)
-            : silent(params.silent()), verbose(params.verbose()), linebuf(), document() {}
+            : silent(params.silent()), verbose(params.verbose()), linebuf() {}
 
         ~ReportPolicy() {
-			// Sort results
-			std::sort(jobs.begin(), jobs.end());
-			std::sort(resources.begin(), resources.end());
-			std::sort(pools.begin(), pools.end());
-			std::sort(schemas.begin(), schemas.end());
-			std::sort(instances.begin(), instances.end());
+            // Sort results
+            std::sort(jobs.begin(), jobs.end());
+            std::sort(resources.begin(), resources.end());
+            std::sort(pools.begin(), pools.end());
+            std::sort(schemas.begin(), schemas.end());
+            std::sort(instances.begin(), instances.end());
 
-			// Display results
+            // Display results
             print();
         }
 
@@ -72,6 +72,7 @@ namespace scribe {
             linebuf.append(begin, len);
             char *data = const_cast<char *>(linebuf.data());
 
+            rapidjson::Document document;
             if (document.ParseInsitu(data).HasParseError()) {
                 fmt::print(stderr, "Cannot parse given string: \033[1;32m{0}\033[0m\n",
                            std::string(begin, len));
@@ -186,7 +187,6 @@ namespace scribe {
         bool silent = false;
         bool verbose = false;
         std::string linebuf;
-        rapidjson::Document document;
 
         std::unordered_map<std::string, JobInfo> status; // Hold status of a current job
 

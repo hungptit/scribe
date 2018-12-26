@@ -8,9 +8,11 @@
 #include "params.hpp"
 #include "policies.hpp"
 #include "report.hpp"
+#include "utils/timer.hpp"
 
 int main(int argc, char *argv[]) {
     auto params = scribe::parse_input_arguments(argc, argv);
+	utils::ElapsedTime<utils::SECOND> timer("Total runtime: ", params.timer());
 	if (params.report()) {
 		scribe::strip_scribe_headers<scribe::ReportPolicy>(params);
 	} else if (params.table()) {
