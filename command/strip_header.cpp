@@ -23,8 +23,7 @@ int main(int argc, char *argv[]) {
 		scribe::strip_scribe_headers<scribe::CompactJsonPolicy>(params);
 	} else if (params.json_pretty_output()) {
 		scribe::strip_scribe_headers<scribe::PrettyJsonPolicy>(params);
-	} else {
-		fmt::print("Unsupported option!");
-		// Generate a report.
+	} else {					// Generate the report by default.
+		scribe::strip_scribe_headers<scribe::ReportPolicy>(params);
 	}
 }
